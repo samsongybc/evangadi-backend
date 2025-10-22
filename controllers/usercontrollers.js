@@ -349,21 +349,28 @@ async function checkuser(req, res) {
 
 // ------------------- Forgot Password -------------------
 const forgotPassword = async (req, res) => {
+  console.log("=== FORGOT PASSWORD REQUEST ===");
   try {
     const { email } = req.body;
+    console.log("Email:", email);
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     // Check if user exists
+    console.log("Checking database...");
     const result = await dbconnection.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
 
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
+      console.log("Email not found");
       return res.status(404).json({ message: "Email not found" });
+    }
 
+    console.log("User found, generating OTP...");
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
+    console.log("OTP:", otp);
 
     // Save OTP + expiration (5 mins)
     await dbconnection.query(
@@ -371,6 +378,7 @@ const forgotPassword = async (req, res) => {
       [otp, email]
     );
 
+    console.log("Sending email...");
     // Send OTP email
     try {
       await sendEmail(
@@ -386,9 +394,11 @@ const forgotPassword = async (req, res) => {
         <p>Best regards,<br/>Support Team</p>
         `
       );
+      console.log("✅ Email sent successfully!");
       res.json({ message: "OTP sent to your email." });
     } catch (emailErr) {
-      console.error("Email sending failed:", emailErr);
+      console.error("❌ Email sending failed:", emailErr.message);
+      console.error("Full error:", emailErr);
       // Clear the OTP since we couldn't send it
       await dbconnection.query(
         "UPDATE users SET reset_otp = NULL, otp_expiration = NULL WHERE email = $1",
@@ -400,7 +410,8 @@ const forgotPassword = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("Forgot password error:", err);
+    console.error("❌ Forgot password error:", err.message);
+    console.error("Full error:", err);
     res
       .status(500)
       .json({ message: "Something went wrong. Please try again later." });
