@@ -7,11 +7,22 @@ if (process.env.NODE_ENV !== "production") {
 
 const sendEmail = async (to, subject, html) => {
   try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error(
+        "Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in your environment variables."
+      );
+    }
+
+    // Remove any spaces from password
+    const cleanPassword = process.env.EMAIL_PASS.replace(/\s+/g, "");
+
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        pass: cleanPassword,
       },
     });
 
@@ -22,7 +33,6 @@ const sendEmail = async (to, subject, html) => {
       html,
     });
 
-    console.log("Email sent:", info.messageId);
     return info;
   } catch (err) {
     console.error("Error sending email:", err);
