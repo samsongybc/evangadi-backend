@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-
 // auth middleware
 const authmiddleware = require("../middleware/authmiddleware");
 
@@ -24,8 +23,8 @@ router.post("/login", login);
 router.get("/checkUser", authmiddleware, checkuser);
 
 // Forgot Password
-router.post("/forgot-Password", forgotPassword);
+router.post("/forgot-password", forgotPassword);
 
 // Reset Password
-router.post("/reset-Password", resetPassword);
+router.post("/reset-password", resetPassword);
 module.exports = router;

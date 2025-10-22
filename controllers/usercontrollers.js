@@ -386,17 +386,24 @@ const forgotPassword = async (req, res) => {
         <p>Best regards,<br/>Support Team</p>
         `
       );
+      res.json({ message: "OTP sent to your email." });
     } catch (emailErr) {
       console.error("Email sending failed:", emailErr);
-      return res
-        .status(200)
-        .json({ message: "If email exists, an OTP has been sent to inbox" });
+      // Clear the OTP since we couldn't send it
+      await dbconnection.query(
+        "UPDATE users SET reset_otp = NULL, otp_expiration = NULL WHERE email = $1",
+        [email]
+      );
+      return res.status(500).json({
+        message:
+          "Failed to send OTP email. Please check server email configuration or try again later.",
+      });
     }
-
-    res.json({ message: "OTP sent to your email." });
   } catch (err) {
     console.error("Forgot password error:", err);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(500)
+      .json({ message: "Something went wrong. Please try again later." });
   }
 };
 
