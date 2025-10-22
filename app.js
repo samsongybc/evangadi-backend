@@ -45,6 +45,8 @@ app.use(
   })
 );
 
+app.options("*", cors());
+
 // Health check endpoint (before any other routes)
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
